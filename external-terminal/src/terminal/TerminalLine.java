@@ -30,6 +30,10 @@ public class TerminalLine {
         return cells[col];
     }
 
+    public Cell[] getCells() {
+        return cells;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
