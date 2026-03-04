@@ -1,9 +1,6 @@
 package terminal;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 public class TerminalBuffer {
     private int width;
@@ -15,13 +12,11 @@ public class TerminalBuffer {
 
     private CellAttributes currentAttrs = CellAttributes.DEFAULT;
 
-    private final TerminalLine[] screen;
+    private TerminalLine[] screen;
 
     private final Deque<TerminalLine> scrollback = new ArrayDeque<>();
 
-    //!!!!!!!!!!!!!!!
-    //tba: resize
-    //!!!!!!!!!!!!!!!
+
     public TerminalBuffer(int height, int width, int maxScrollback) {
         if (width <= 0 || height <= 0) throw new IllegalArgumentException("Dimensions must be positive");
         this.width = width;
@@ -55,6 +50,7 @@ public class TerminalBuffer {
 
     public void insertBottomLine()
     {
+        if(scrollback.size() >= maxScrollback) return;
         TerminalLine topLine = screen[0];
 
         for (int i = 0; i < height - 1; i++) screen[i] = screen[i + 1];
@@ -110,7 +106,6 @@ public class TerminalBuffer {
 
         cursorRow = height - 1;
         while(checkEmptyLine(cursorRow)) cursorRow--;
-        TerminalLine bottomLine = screen[cursorRow];
         if(cursorRow >= height - 1) return;
 
         for(int i = height - 1; i >= 1; i--) screen[i] = screen[i - 1];
@@ -176,7 +171,7 @@ public class TerminalBuffer {
         cursorCol = Math.min(line.getCells().length, width - 1);
     }
     
-    //-----------------relative content access----------------------------
+    //---------------------relative content access----------------------------
 
     public Cell getScreenCell(int col, int row) {
         return screen[row].getCell(col);
@@ -199,7 +194,7 @@ public class TerminalBuffer {
         return sb.toString();
     }
     
-    //-----------------absolute content access----------------------------
+    //-------------------absolute content access-------------------------
 
     public int getTotalLines() { return scrollback.size() + height; }
 
@@ -237,6 +232,38 @@ public class TerminalBuffer {
         }
         return sb.toString();
     }
+    //--------------------------resize action-------------------------------
+    public void resize(int newWidth, int newHeight) {
+        if (newWidth <= 0 || newHeight <= 0) throw new IllegalArgumentException("Dimensions must be positive");
+
+        for (int i = 0; i < height; i++) screen[i] = resizeLine(screen[i], newWidth);
+
+        List<TerminalLine> currentScreen = new ArrayList<>(Arrays.asList(screen).subList(0, height));
+
+        if (newHeight > height) {
+            for (int i = 0; i < newHeight - height; i++) currentScreen.add(new TerminalLine(newWidth));
+        } else if (newHeight < height) {
+            int excess = height - newHeight;
+            for (int i = 0; i < excess; i++) {
+                scrollback.addLast(currentScreen.removeFirst());
+            }
+            while (scrollback.size() > maxScrollback) scrollback.removeFirst();
+        }
+
+        // ArrayDeque doesn't support set-by-index, so we rebuild it
+        TerminalLine[] sbArray = scrollback.toArray(new TerminalLine[0]);
+        scrollback.clear();
+        for (TerminalLine line : sbArray) scrollback.addLast(resizeLine(line, newWidth));
+
+        width  = newWidth;
+        height = newHeight;
+        screen = currentScreen.toArray(new TerminalLine[0]);
+
+        cursorCol = Math.clamp(cursorCol, 0, width - 1);
+        cursorRow = Math.clamp(cursorRow, 0, height - 1);
+    }
+
+    //--------------------------miscellaneous-------------------------------
 
     private void eraseWideCharAt(TerminalLine line, int col) {
         Cell cell = line.getCell(col);
@@ -295,6 +322,20 @@ public class TerminalBuffer {
 
     public void setStyle(TextStyle style) {
         currentAttrs = currentAttrs.withStyle(style);
+    }
+
+    private static TerminalLine resizeLine(TerminalLine line, int newWidth) {
+        TerminalLine newLine = new TerminalLine(newWidth);
+        int copyWidth = Math.min(line.getWidth(), newWidth);
+        for (int col = 0; col < copyWidth; col++) {
+            newLine.setCell(col, line.getCell(col));
+        }
+        // If a wide-char leader sits at the last copied column and its continuation was cut, erase it
+        if (copyWidth < line.getWidth() && copyWidth > 0) {
+            Cell lastCell = newLine.getCell(copyWidth - 1);
+            if (lastCell.width == 2) newLine.setCell(copyWidth - 1, Cell.EMPTY);
+        }
+        return newLine;
     }
 
     public int getWidth()  { return width;  }

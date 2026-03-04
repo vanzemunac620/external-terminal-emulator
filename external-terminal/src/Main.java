@@ -14,6 +14,9 @@ public class Main {
         tb.fillLine('a');
         tb.setCursorPos(2,1);
         tb.insertText("bb");
+        tb.setCursorPos(6,1);
+        System.out.println(tb);
+        tb.resize(6, 2);
         System.out.println(tb);
     }
 }

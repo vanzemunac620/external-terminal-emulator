@@ -2,7 +2,7 @@ package terminal;
 
 import java.util.Objects;
 
-/// A single cell in the terminal grid. Immutable value object.
+/// A single cell in the terminal grid.
 ///
 ///     - `ch` — the character stored in this cell, or `null` for an empty cell.
 ///     - `attrs` — visual attributes (colors, style flags).
@@ -11,9 +11,6 @@ import java.util.Objects;
 ///   - 1 = normal character
 ///     - 2 = wide-character leader (occupies this cell and the next)
 ///     - 0 = wide-character continuation (right half of a wide char, no visible glyph)
-///
-///
-///
 public final class Cell {
 
     public static final Cell EMPTY = new Cell(null, CellAttributes.DEFAULT, 1);
