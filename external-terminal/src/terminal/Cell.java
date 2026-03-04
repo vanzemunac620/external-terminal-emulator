@@ -16,9 +16,9 @@ import java.util.Objects;
 ///
 public final class Cell {
 
-    public static final Cell empty = new Cell(null, CellAttributes.DEFAULT, 1);
+    public static final Cell EMPTY = new Cell(null, CellAttributes.DEFAULT, 1);
 
-    public static final Cell continuation = new Cell(null, CellAttributes.DEFAULT, 0);
+    public static final Cell CONTINUATION = new Cell(null, CellAttributes.DEFAULT, 0);
 
     public final Character ch;
     public final CellAttributes attrs;

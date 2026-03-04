@@ -8,7 +8,7 @@ public class TerminalLine {
         this.width = width;
         this.cells = new Cell[width];
         for (int i = 0; i < width; i++) {
-            cells[i] = Cell.empty;
+            cells[i] = Cell.EMPTY;
         }
     }
 

@@ -20,7 +20,7 @@ public class TerminalBuffer {
     private final Deque<TerminalLine> scrollback = new ArrayDeque<>();
 
     //!!!!!!!!!!!!!!!
-    //tba: text styles, resize
+    //tba: resize
     //!!!!!!!!!!!!!!!
     public TerminalBuffer(int height, int width, int maxScrollback) {
         if (width <= 0 || height <= 0) throw new IllegalArgumentException("Dimensions must be positive");
@@ -32,6 +32,7 @@ public class TerminalBuffer {
     }
 
     //-------------------------text editing action----------------------------------
+
     public void writeText(String text) {
         TerminalLine line = screen[cursorRow];
         for (int i = 0; i < text.length(); i++) {
@@ -46,7 +47,7 @@ public class TerminalBuffer {
 
             line.setCell(cursorCol, new Cell(ch, currentAttrs, cw));
             if (cw == 2 && cursorCol + 1 < width) {
-                line.setCell(cursorCol + 1, Cell.continuation);
+                line.setCell(cursorCol + 1, Cell.CONTINUATION);
             }
             cursorCol += cw;
         }
@@ -79,7 +80,7 @@ public class TerminalBuffer {
             int cw = Math.max(cell.width, 1);
             if (cw == 2 && col + 1 >= width) break;
             line.setCell(col, cell);
-            if (cw == 2 && col + 1 < width) line.setCell(col + 1, Cell.continuation);
+            if (cw == 2 && col + 1 < width) line.setCell(col + 1, Cell.CONTINUATION);
             col += cw;
         }
 
@@ -89,11 +90,11 @@ public class TerminalBuffer {
             Cell cell = oldCells[srcCol];
             int cw = Math.max(cell.width, 1);
             if (cell.width == 2 && dstCol + 1 >= width) {
-                line.setCell(dstCol, Cell.empty);
+                line.setCell(dstCol, Cell.EMPTY);
             } else {
                 line.setCell(dstCol, cell);
                 if (cell.width == 2 && dstCol + 1 < width) {
-                    line.setCell(dstCol + 1, Cell.continuation);
+                    line.setCell(dstCol + 1, Cell.CONTINUATION);
                 }
             }
             srcCol += cw;
@@ -102,6 +103,7 @@ public class TerminalBuffer {
 
         cursorCol = Math.min(cursorCol + insertLen, width);
     }
+
     public void scrollUpOneLine()
     {
         if(scrollback.isEmpty()) return;
@@ -125,7 +127,6 @@ public class TerminalBuffer {
     public void fillLine(Character ch) {
         fillLine(cursorRow, ch);
     }
-
 
     public void clearScreen() {
         for (int i = 0; i < height; i++) screen[i] = new TerminalLine(width);
@@ -237,14 +238,12 @@ public class TerminalBuffer {
         return sb.toString();
     }
 
-    //--------------------wide char action----------------------------
-
     private void eraseWideCharAt(TerminalLine line, int col) {
         Cell cell = line.getCell(col);
         if (cell.width == 0 && col > 0) {
-            line.setCell(col - 1, Cell.empty);
+            line.setCell(col - 1, Cell.EMPTY);
         } else if (cell.width == 2 && col + 1 < width) {
-            line.setCell(col + 1, Cell.empty);
+            line.setCell(col + 1, Cell.EMPTY);
         }
     }
 
@@ -270,7 +269,7 @@ public class TerminalBuffer {
     {
         Cell[] rowCells = screen[row].getCells();
 
-        return rowCells[0].equals(Cell.empty);
+        return rowCells[0].equals(Cell.EMPTY);
     }
 
     private List<Cell> textToCells(String text) {
@@ -279,10 +278,30 @@ public class TerminalBuffer {
             char ch = text.charAt(i);
             int cw = displayWidth(ch);
             result.add(new Cell(ch, currentAttrs, cw));
-            if (cw == 2) result.add(Cell.continuation);
+            if (cw == 2) result.add(Cell.CONTINUATION);
         }
         return result;
     }
+
+    public CellAttributes getCurrentAttrs() { return currentAttrs; }
+
+    public void setForeground(Color color) {
+        currentAttrs = currentAttrs.withForeground(color);
+    }
+
+    public void setBackground(Color color) {
+        currentAttrs = currentAttrs.withBackground(color);
+    }
+
+    public void setStyle(TextStyle style) {
+        currentAttrs = currentAttrs.withStyle(style);
+    }
+
+    public int getWidth()  { return width;  }
+    public int getHeight() { return height; }
+
+    public int getCursorCol() { return cursorCol; }
+    public int getCursorRow() { return cursorRow; }
 
     @Override
     public String toString() {
