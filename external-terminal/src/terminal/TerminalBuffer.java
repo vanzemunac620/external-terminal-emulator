@@ -136,7 +136,7 @@ public class TerminalBuffer {
 
     //---------------------cursor movement---------------------------
 
-    public void setCursorPos(int col, int row)
+    public void setCursorPos(int row, int col)
     {
         cursorCol = Math.clamp(col, 0, width - 1);
         cursorRow = Math.clamp(row, 0, height - 1);
@@ -173,11 +173,11 @@ public class TerminalBuffer {
     
     //---------------------relative content access----------------------------
 
-    public Cell getScreenCell(int col, int row) {
+    public Cell getScreenCell(int row, int col) {
         return screen[row].getCell(col);
     }
 
-    public CellAttributes getScreenCellAttrs(int col, int row) {
+    public CellAttributes getScreenCellAttrs(int row, int col) {
         return screen[row].getCell(col).attrs;
     }
 
@@ -211,11 +211,11 @@ public class TerminalBuffer {
         return screen[absRow - sbSize];
     }
 
-    public Cell getCell(int col, int absRow) {
+    public Cell getCell(int absRow, int col) {
         return lineAt(absRow).getCell(col);
     }
 
-    public CellAttributes getCellAttrs(int col, int absRow) {
+    public CellAttributes getCellAttrs(int absRow, int col) {
         return lineAt(absRow).getCell(col).attrs;
     }
 
@@ -233,7 +233,7 @@ public class TerminalBuffer {
         return sb.toString();
     }
     //--------------------------resize action-------------------------------
-    public void resize(int newWidth, int newHeight) {
+    public void resize(int newHeight, int newWidth) {
         if (newWidth <= 0 || newHeight <= 0) throw new IllegalArgumentException("Dimensions must be positive");
 
         for (int i = 0; i < height; i++) screen[i] = resizeLine(screen[i], newWidth);
@@ -349,7 +349,7 @@ public class TerminalBuffer {
         StringBuilder sb = new StringBuilder();
         sb.append("TerminalBuffer(").append(width).append('x').append(height)
                 .append(", scrollback=").append(scrollback.size()).append('/').append(maxScrollback).append(")\n");
-        sb.append("Cursor: (").append(cursorCol).append(", ").append(cursorRow).append(")\n");
+        sb.append("Cursor: (").append(cursorRow).append(", ").append(cursorCol).append(")\n");
 
         sb.append("─── Scrollback ───\n");
         int i = 0;

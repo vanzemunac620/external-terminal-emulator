@@ -12,11 +12,11 @@ public class Main {
         tb.scrollUpOneLine();
         System.out.println(tb);
         tb.fillLine('a');
-        tb.setCursorPos(2,1);
+        tb.setCursorPos(1, 2);
         tb.insertText("bb");
-        tb.setCursorPos(6,1);
+        tb.setCursorPos(1, 6);
         System.out.println(tb);
-        tb.resize(6, 2);
+        tb.resize(2, 6);
         System.out.println(tb);
     }
 }
