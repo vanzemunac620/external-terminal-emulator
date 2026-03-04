@@ -5,18 +5,18 @@ import java.util.Objects;
 public class CellAttributes {
     public static final CellAttributes DEFAULT = new CellAttributes(null, null, TextStyle.DEFAULT);
 
-    public final Color foreground;
-    public final Color background;
+    public final TerminalColor foreground;
+    public final TerminalColor background;
     public final TextStyle style;
 
-    public CellAttributes(Color background, Color foreground, TextStyle style) {
+    public CellAttributes(TerminalColor foreground, TerminalColor background, TextStyle style) {
         this.background = background;
         this.foreground = foreground;
         this.style = (style != null) ? style : TextStyle.DEFAULT;
     }
 
-    public CellAttributes withForeground(Color foreground) { return new CellAttributes(foreground, background, style); }
-    public CellAttributes withBackground(Color background) { return new CellAttributes(foreground, background, style); }
+    public CellAttributes withForeground(TerminalColor foreground) { return new CellAttributes(foreground, background, style); }
+    public CellAttributes withBackground(TerminalColor background) { return new CellAttributes(foreground, background, style); }
     public CellAttributes withStyle(TextStyle style)           { return new CellAttributes(foreground, background, style); }
 
 

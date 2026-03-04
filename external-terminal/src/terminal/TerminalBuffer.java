@@ -210,7 +210,7 @@ public class TerminalBuffer {
         }
         return screen[absRow - sbSize];
     }
-
+    //-----------------------cell attribute control------------------------------
     public Cell getCell(int absRow, int col) {
         return lineAt(absRow).getCell(col);
     }
@@ -219,6 +219,13 @@ public class TerminalBuffer {
         return lineAt(absRow).getCell(col).attrs;
     }
 
+    public void resetAttributes() {
+        currentAttrs = CellAttributes.DEFAULT;
+    }
+
+    public void setAttributes(TerminalColor foreground, TerminalColor background, TextStyle style) {
+        currentAttrs = new CellAttributes(foreground, background, style);
+    }
     public String getLine(int absRow) {
         return lineAt(absRow).toString();
     }
@@ -312,12 +319,12 @@ public class TerminalBuffer {
 
     public CellAttributes getCurrentAttrs() { return currentAttrs; }
 
-    public void setForeground(Color color) {
-        currentAttrs = currentAttrs.withForeground(color);
+    public void setForeground(TerminalColor terminalColor) {
+        currentAttrs = currentAttrs.withForeground(terminalColor);
     }
 
-    public void setBackground(Color color) {
-        currentAttrs = currentAttrs.withBackground(color);
+    public void setBackground(TerminalColor terminalColor) {
+        currentAttrs = currentAttrs.withBackground(terminalColor);
     }
 
     public void setStyle(TextStyle style) {
@@ -343,6 +350,19 @@ public class TerminalBuffer {
 
     public int getCursorCol() { return cursorCol; }
     public int getCursorRow() { return cursorRow; }
+
+    public int getMaxScrollback() {
+        return maxScrollback;
+    }
+    public int getScrollbackSize() { return scrollback.size(); }
+
+    public TerminalLine[] getScreen() {
+        return screen;
+    }
+
+    public Deque<TerminalLine> getScrollback() {
+        return scrollback;
+    }
 
     @Override
     public String toString() {
