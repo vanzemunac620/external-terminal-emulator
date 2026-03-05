@@ -254,11 +254,13 @@ class TerminalBufferTest {
         }
 
         @Test
-        void insertOverflowIsDiscarded() {
-            buf.writeText("AAAAAAAAAA"); // full line
-            buf.setCursorPos(0, 8);
+        void insertOverflowIsWrapped() {
+            buf.writeText("AAAAAAAAAAAA"); // full line
+            buf.setCursorPos(0, 11);
             buf.insertText("BB");
-            assertEquals('B', buf.getScreenCell(0, 8).ch.charValue());
+            assertEquals('B', buf.getScreenCell(0, 11).ch.charValue());
+            assertEquals('B', buf.getScreenCell(1,0).ch.charValue());
+            assertEquals('A', buf.getScreenCell(1,1).ch.charValue());
         }
     }
 
@@ -309,7 +311,7 @@ class TerminalBufferTest {
             buf.writeText("FirstLine");
             buf.insertBottomLine();
             assertEquals(1, buf.getScrollbackSize());
-            assertEquals("FirstLine", buf.getLine(0));
+            assertEquals("FirstLine", buf.getLineAbsolute(0));
         }
 
         @Test
@@ -317,7 +319,7 @@ class TerminalBufferTest {
             buf.setCursorPos(0, 0); buf.writeText("Row0");
             buf.setCursorPos(1, 0); buf.writeText("Row1");
             buf.insertBottomLine();
-            assertEquals("Row0", buf.getLine(0));
+            assertEquals("Row0", buf.getLineAbsolute(0));
             assertEquals("Row1", buf.getScreenLine(0));
         }
 
@@ -366,7 +368,7 @@ class TerminalBufferTest {
             buf.insertBottomLine();
             buf.clearScreen();
             assertEquals(1, buf.getScrollbackSize());
-            assertEquals("SBLine", buf.getLine(0));
+            assertEquals("SBLine", buf.getLineAbsolute(0));
         }
 
         @Test
@@ -417,7 +419,7 @@ class TerminalBufferTest {
         void getLineFromScrollback() {
             buf.setCursorPos(0, 0); buf.writeText("InScrollback");
             buf.insertBottomLine();
-            assertEquals("InScrollback", buf.getLine(0));
+            assertEquals("InScrollback", buf.getLineAbsolute(0));
         }
 
         @Test
@@ -528,8 +530,8 @@ class TerminalBufferTest {
             buf.resize(3, 10);
             assertEquals(3, buf.getHeight());
             assertEquals(2, buf.getScrollbackSize());
-            assertEquals("Row0", buf.getLine(0));
-            assertEquals("Row1", buf.getLine(1));
+            assertEquals("Row0", buf.getLineAbsolute(0));
+            assertEquals("Row1", buf.getLineAbsolute(1));
             assertEquals("Row2", buf.getScreenLine(0));
         }
 
@@ -546,7 +548,7 @@ class TerminalBufferTest {
             buf.setCursorPos(0, 0); buf.writeText("SCROLLBACK");
             buf.insertBottomLine();
             buf.resize(5, 5);
-            assertEquals("SCROL", buf.getLine(0));
+            assertEquals("SCROL", buf.getLineAbsolute(0));
         }
 
         @Test
@@ -569,14 +571,14 @@ class TerminalBufferTest {
             tiny.writeText("A");
             assertEquals('A', tiny.getScreenCell(0, 0).ch.charValue());
             tiny.insertBottomLine();
-            assertEquals("A", tiny.getLine(0));
+            assertEquals("A", tiny.getLineAbsolute(0));
         }
 
         @Test
         void fillAndInsertLineInteraction() {
             buf.fillLine(0, '-');
             buf.insertBottomLine();
-            assertEquals("------------", buf.getLine(0));
+            assertEquals("------------", buf.getLineAbsolute(0));
         }
 
         @Test
@@ -584,7 +586,7 @@ class TerminalBufferTest {
             buf.setCursorPos(0, buf.getWidth() - 1);
             buf.writeText("Z");
             buf.insertBottomLine();
-            String sbLine = buf.getLine(0);
+            String sbLine = buf.getLineAbsolute(0);
             assertTrue(sbLine.stripTrailing().endsWith("Z"));
         }
 
@@ -612,7 +614,7 @@ class TerminalBufferTest {
             buf.setCursorPos(0, 0);
             buf.writeText("ScreenRow0");
             // No scrollback, so absolute row 0 == screen row 0
-            assertEquals("ScreenRow0", buf.getLine(0));
+            assertEquals("ScreenRow0", buf.getLineAbsolute(0));
         }
 
         @Test

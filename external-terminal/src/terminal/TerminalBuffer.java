@@ -1,6 +1,7 @@
 package terminal;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class TerminalBuffer {
     private int width;
@@ -60,44 +61,37 @@ public class TerminalBuffer {
         while (scrollback.size() > maxScrollback) scrollback.removeFirst();
     }
 
-    public void insertText(String text) {
-        TerminalLine line = screen[cursorRow];
-
+    public void insertText(String text)
+    {
         List<Cell> insertCells = textToCells(text);
-        int insertLen = 0;
-        for (Cell c : insertCells) insertLen += Math.max(c.width, 1);
 
-        Cell[] oldCells = new Cell[width];
-        for (int i = 0; i < width; i++) oldCells[i] = line.getCell(i);
+        int row = cursorRow;
+        int startCol = cursorCol;
+        int shiftBy = insertCells.size();
 
-        int col = cursorCol;
-        for (Cell cell : insertCells) {
-            if (col >= width) break;
-            int cw = Math.max(cell.width, 1);
-            if (cw == 2 && col + 1 >= width) break;
-            line.setCell(col, cell);
-            if (cw == 2 && col + 1 < width) line.setCell(col + 1, Cell.CONTINUATION);
-            col += cw;
+        ArrayList<Cell> cellsToShift = new ArrayList<>();
+        TerminalLine line = screen[cursorRow];
+        for (int i = startCol; i < width; i++)  cellsToShift.add(line.getCell(i));
+
+        List<Cell> combinedCells = new ArrayList<>(Stream.concat(insertCells.stream(), cellsToShift.stream()).toList());
+        for(int i = startCol; i < width; i++)
+        {
+            line.setCell(i, combinedCells.removeFirst());
         }
-
-        int srcCol = cursorCol;
-        int dstCol = cursorCol + insertLen;
-        while (srcCol < width && dstCol < width) {
-            Cell cell = oldCells[srcCol];
-            int cw = Math.max(cell.width, 1);
-            if (cell.width == 2 && dstCol + 1 >= width) {
-                line.setCell(dstCol, Cell.EMPTY);
-            } else {
-                line.setCell(dstCol, cell);
-                if (cell.width == 2 && dstCol + 1 < width) {
-                    line.setCell(dstCol + 1, Cell.CONTINUATION);
+        combinedCells.removeIf(c -> c.equals(Cell.EMPTY));
+        if(!combinedCells.isEmpty()){
+            cursorCol = 0;
+            cursorRow++;
+            line = screen[cursorRow];
+            if(cursorRow >= height) insertBottomLine();
+            for(Cell cell : combinedCells){
+                if(!cell.equals(Cell.EMPTY)) {
+                    line.setCell(cursorCol, cell);
+                    cursorCol++;
                 }
             }
-            srcCol += cw;
-            dstCol += cw;
         }
-
-        cursorCol = Math.min(cursorCol + insertLen, width);
+        else cursorCol += shiftBy;
     }
 
     public void scrollUpOneLine()
@@ -185,6 +179,7 @@ public class TerminalBuffer {
         return screen[row].toString();
     }
 
+
     public String getScreenContent() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < height; i++) {
@@ -210,6 +205,9 @@ public class TerminalBuffer {
         }
         return screen[absRow - sbSize];
     }
+    public String getLineAbsolute(int absRow) {
+        return lineAt(absRow).toString();
+    }
     //-----------------------cell attribute control------------------------------
     public Cell getCell(int absRow, int col) {
         return lineAt(absRow).getCell(col);
@@ -226,16 +224,14 @@ public class TerminalBuffer {
     public void setAttributes(TerminalColor foreground, TerminalColor background, TextStyle style) {
         currentAttrs = new CellAttributes(foreground, background, style);
     }
-    public String getLine(int absRow) {
-        return lineAt(absRow).toString();
-    }
+
 
     public String getAllContent() {
         int total = getTotalLines();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < total; i++) {
             if (i > 0) sb.append('\n');
-            sb.append(getLine(i));
+            sb.append(getLineAbsolute(i));
         }
         return sb.toString();
     }
